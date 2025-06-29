@@ -7,29 +7,98 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\LikeController;
+ use App\Http\Controllers\SaveController;
 
 
+
+
+// ✅ التسجيل
 Route::post('/register', [AuthController::class, 'register']);
+// يقوم المستخدم بإنشاء حساب جديد عن طريق إرسال الاسم، البريد، وكلمة المرور.
+
 Route::post('/login', [AuthController::class, 'login']);
+// يقوم المستخدم بتسجيل الدخول واستلام توكن المصادقة (Sanctum).
+
 Route::middleware('auth:sanctum')->group(function () {
+
+    // ✅ تسجيل الخروج
     Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/profile', [AuthController::class, 'profile']);
+    // تسجيل خروج المستخدم الحالي (إبطال التوكن).
+
+    // ✅ الملف الشخصي
+    Route::get('/profile', [AuthController::class, 'profile']);
+    // جلب معلومات المستخدم المصادق عليه حاليًا.
+
+    // ✅ تغيير كلمة المرور
     Route::post('/change-password', [AuthController::class, 'changePassword']);
+    // تغيير كلمة مرور المستخدم المصادق عليه.
 
-       Route::get('/users', [UserController::class, 'index']);           // Optional (admin)
-Route::get('/user/{id}', [UserController::class, 'show']);
-Route::put('/user/{id}', [UserController::class, 'update']);
+    // ✅ جلب جميع المستخدمين (اختياري - للإدارة)
+    Route::get('/users', [UserController::class, 'index']);
+    // قائمة بجميع المستخدمين (ممكن تقييدها للمشرف فقط).
+
+    // ✅ جلب مستخدم معين
+    Route::get('/user/{id}', [UserController::class, 'show']);
+    // جلب معلومات مستخدم حسب الـ ID.
+
+    // ✅ تحديث بيانات مستخدم
+    Route::put('/user/{id}', [UserController::class, 'update']);
+    // تعديل بيانات مستخدم معين (يُفضل التحقق من الصلاحيات).
 });
-
 Route::middleware('auth:sanctum')->group(function () {
+
+    // ✅ كل المنشورات
     Route::get('/posts', [PostController::class, 'index']);
+    // جلب كل المنشورات من قاعدة البيانات.
+
+    // ✅ إنشاء منشور جديد
     Route::post('/posts', [PostController::class, 'store']);
+    // إنشاء منشور جديد للمستخدم الحالي.
+
+    // ✅ عرض منشور واحد
     Route::get('/posts/{post}', [PostController::class, 'show']);
+    // عرض تفاصيل منشور معين.
+
+    // ✅ حذف منشور
     Route::delete('/posts/{post}', [PostController::class, 'destroy']);
+    // حذف منشور معين (يفضل التحقق من ملكية المستخدم).
 
+    // ✅ تعديل منشور
+    Route::post('/posts/{post}', [PostController::class, 'update']);
+    // تعديل منشور معين (مع تحقق الصلاحيات).
+
+
+    // ✅ حذف صورة من منشور
+    Route::delete('/posts/{post}/images/{image}', [PostController::class, 'deleteImage']);
+    // حذف صورة من منشور معين.
+
+    // ✅ إضافة تعليق
     Route::post('/posts/{post}/comments', [CommentController::class, 'store']);
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+    // يضيف تعليق على منشور.
 
+    // ✅ حذف تعليق
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+    // حذف تعليق معين (بشرط أن يكون صاحب التعليق أو مشرف).
+
+    // ✅ إعجاب/إلغاء إعجاب
     Route::post('/posts/{post}/like', [LikeController::class, 'toggle']);
+    // إذا أعجب مسبقًا، يتم إلغاء الإعجاب، والعكس.
+
+    // ✅ حفظ/إلغاء حفظ منشور
+    Route::post('/posts/{post}/toggle-save', [SaveController::class, 'toggle']);
+    // يحفظ منشور في قائمة المستخدم أو يلغيه.
+
+    // ✅ جلب كل المنشورات المحفوظة للمستخدم
+    Route::get('/posts/saved', [SaveController::class, 'index']);
+    // قائمة بالمنشورات التي حفظها المستخدم.
+
+    // ✅ جلب كل المنشورات التي أعجب بها المستخدم
+    Route::get('/posts/liked', [LikeController::class, 'index']);
+    Route::get('/user/{id}/posts', [UserController::class, 'userWithPosts']);
+
 });
 
+Route::middleware('auth:sanctum')->post('/user/avatar', [UserController::class, 'updateAvatar']);
+// تحديث صورة الملف الشخصي للمستخدم. يجب أن يكون المستخدم مصادق عليه.
+Route::middleware('auth:sanctum')->get('/user/saved-posts', [UserController::class, 'userWithSavedPosts']);
+// جلب المنشورات المحفوظة من قبل المستخدم.
