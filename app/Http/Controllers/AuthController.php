@@ -30,7 +30,7 @@ class AuthController extends Controller
                 'email'    => 'required|email|unique:users',
                 'password' => 'required|string|min:6',
                 'role'     => 'required|string',
-                'dob'      => 'required|date',
+                'dob'      => 'date',
             ]);
 
             $user = User::create([
@@ -38,7 +38,9 @@ class AuthController extends Controller
                 'email'    => $request->email,
                 'password' => Hash::make($request->password),
                 'role'     => $request->role,
-                'dob'      => $request->dob,
+               'dob'      => $request->dob,
+               'avatar_url' => $request->avatar_url ?? 'default-avatar.png',
+
             ]);
 
             $token = $user->createToken('auth_token')->plainTextToken;
@@ -133,4 +135,3 @@ class AuthController extends Controller
     }
 }
 
-// This controller handles user authentication, including registration, login, logout, profile retrieval, and password change.

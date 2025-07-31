@@ -3,10 +3,47 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+ use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
 {
+   
+public function render($request, Throwable $exception)
+{
+    // handle API requests
+    if ($request->expectsJson()) {
+
+        // نموذج غير موجود
+        if ($exception instanceof ModelNotFoundException) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Resource not found',
+                'error' => 'The requested record does not exist.'
+            ], 404);
+        }
+
+        // رابط أو Route غير موجود
+        if ($exception instanceof NotFoundHttpException) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Route not found',
+                'error' => 'The requested endpoint does not exist.'
+            ], 404);
+        }
+
+        // أخطاء أخرى غير متوقعة
+        // return response()->json([
+        //     'status' => false,
+        //     'message' => 'Unexpected error occurred',
+        //     'error' => $exception->getMessage()
+        // ], 500);
+    }
+
+    return parent::render($request, $exception);
+}
+
     /**
      * A list of exception types with their corresponding custom log levels.
      *

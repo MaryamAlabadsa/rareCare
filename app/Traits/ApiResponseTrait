@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Traits;
+
+trait ApiResponseTrait
+{
+    protected function apiResponse($status, $code, $message, $data = null, $errors = null)
+    {
+        return response()->json([
+            'status'  => $status,
+            'code'    => $code,
+            'message' => $message,
+            'data'    => $data,
+            'errors'  => $errors,
+        ], $code);
+    }
+}

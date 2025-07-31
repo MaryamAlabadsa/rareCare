@@ -16,6 +16,7 @@ return new class extends Migration
         $table->string('name');
         $table->string('email')->unique();
         $table->string('password');
+$table->string('avatar_url')->nullable();
         $table->enum('role', ['patient', 'doctor', 'admin']);
         $table->date('dob')->nullable();
         $table->timestamps();

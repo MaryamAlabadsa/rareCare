@@ -42,7 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // جلب معلومات مستخدم حسب الـ ID.
 
     // ✅ تحديث بيانات مستخدم
-    Route::put('/user/{id}', [UserController::class, 'update']);
+    Route::post('/user/{id}', [UserController::class, 'update']);
     // تعديل بيانات مستخدم معين (يُفضل التحقق من الصلاحيات).
 });
 Route::middleware('auth:sanctum')->group(function () {
@@ -89,16 +89,19 @@ Route::middleware('auth:sanctum')->group(function () {
     // يحفظ منشور في قائمة المستخدم أو يلغيه.
 
     // ✅ جلب كل المنشورات المحفوظة للمستخدم
-    Route::get('/posts/saved', [SaveController::class, 'index']);
+   Route::get('/user/saved-posts/{id}', [UserController::class, 'userWithSavedPosts']);
     // قائمة بالمنشورات التي حفظها المستخدم.
 
+    // routes/api.php
+// Route::get('/posts/{id}/saved-by-users', [SaveController::class, 'postWithSavedByUsers']);
+
     // ✅ جلب كل المنشورات التي أعجب بها المستخدم
-    Route::get('/posts/liked', [LikeController::class, 'index']);
+    Route::get('/posts/liked/{id}', [UserController::class, 'userWithLikes']);
+
     Route::get('/user/{id}/posts', [UserController::class, 'userWithPosts']);
+    Route::post('/test', [UserController::class, 'test']);
 
 });
 
 Route::middleware('auth:sanctum')->post('/user/avatar', [UserController::class, 'updateAvatar']);
 // تحديث صورة الملف الشخصي للمستخدم. يجب أن يكون المستخدم مصادق عليه.
-Route::middleware('auth:sanctum')->get('/user/saved-posts', [UserController::class, 'userWithSavedPosts']);
-// جلب المنشورات المحفوظة من قبل المستخدم.

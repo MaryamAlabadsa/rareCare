@@ -22,6 +22,8 @@ class Image extends Model
         'updated_at' => 'datetime',
     ];
 
+
+
     public function getUrlAttribute()
     {
         return asset($this->path); // Assuming the path is a relative URL

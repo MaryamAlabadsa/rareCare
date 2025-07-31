@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Models\Image;
 use App\Models\Comment;
-use App\Models\Likes;
+use App\Models\Like;
 use App\Models\User;
+use App\Models\Save;
 
 class Post extends Model
 {
@@ -28,7 +29,9 @@ class Post extends Model
         'user_avatar_url',
         'image_count',
         'commented_by_user',
-        'liked_by_user'
+        'liked_by_user',
+        'is_saved_by_user',
+        'saves_count',
     ];
 
     protected $casts = [
@@ -49,19 +52,29 @@ class Post extends Model
 
     public function likes()
     {
-        return $this->hasMany(Likes::class);
+        return $this->hasMany(Like::class);
     }
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
+    
     // Accessors
-    public function getImageUrlsAttribute()
-    {
-        return $this->images->pluck('path');
+  public function getImageUrlsAttribute()
+{
+    if (!$this->images || $this->images->isEmpty()) {
+        return [''];
     }
+
+    return $this->images->filter(function ($image) {
+        return $image && $image->path;
+    })->map(function ($image) {
+        return url('/storage/' . $image->path);
+    })->values()->all();
+}
+
+
 
     public function getCommentCountAttribute()
     {
@@ -117,4 +130,26 @@ class Post extends Model
     {
         return auth()->check() ? $this->likes->contains('user_id', auth()->id()) : false;
     }
+public function saves()
+{
+    return $this->hasMany(Save::class);
+}
+
+public function getIsSavedByUserAttribute()
+{
+    return auth()->check() ? $this->saves->contains('user_id', auth()->id()) : false;
+}
+
+
+public function getSavesCountAttribute()
+{
+    return $this->saves()->count();
+}
+public function savedByUsers()
+{
+    return $this->belongsToMany(User::class, 'saves', 'post_id', 'user_id')
+                ->withTimestamps();
+}
+
+
 }
