@@ -61,19 +61,15 @@ class Post extends Model
     }
     
     // Accessors
-  public function getImageUrlsAttribute()
+public function getImageUrlsAttribute()
 {
-    if (!$this->images || $this->images->isEmpty()) {
-        return [''];
-    }
-
-    return $this->images->filter(function ($image) {
-        return $image && $image->path;
-    })->map(function ($image) {
-        return url('/storage/' . $image->path);
-    })->values()->all();
+    return $this->images
+        ? $this->images->filter(fn($image) => $image && $image->path)
+                       ->map(fn($image) => url('/' . $image->path))
+                       ->values()
+                       ->all()
+        : [];
 }
-
 
 
     public function getCommentCountAttribute()
@@ -113,7 +109,9 @@ class Post extends Model
 
     public function getUserAvatarUrlAttribute()
     {
-        return $this->user ? $this->user->avatar_url : null;
+return $this->user && $this->user->avatar_url
+    ? url('/storage/' . $this->user->avatar_url)
+    : null;
     }
 
     public function getImageCountAttribute()
@@ -143,7 +141,7 @@ public function getIsSavedByUserAttribute()
 
 public function getSavesCountAttribute()
 {
-    return $this->saves()->count();
+return $this->relationLoaded('saves') ? $this->saves->count() : $this->saves()->count();
 }
 public function savedByUsers()
 {

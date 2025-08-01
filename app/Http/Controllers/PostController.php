@@ -116,35 +116,48 @@ public function destroy(Post $post)
 public function update(Request $request, Post $post)
 {
     try {
+        // تحقق من ملكية المنشور
         if ($post->user_id !== Auth::id()) {
             return $this->apiResponse('error', 403, 'You are not authorized to update this post');
         }
 
+        // تحقق من صحة البيانات المدخلة
         $request->validate([
             'txt' => 'nullable|string',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-// dd($request->all());
+
+        // تحديث نص المنشور
         $post->update(['txt' => $request->txt]);
 
+        // التعامل مع الصور الجديدة (إن وجدت)
         if ($request->hasFile('images')) {
             $images = $request->file('images');
             if (!is_array($images)) {
-                $images = [$images]; // ensure iterable
+                $images = [$images]; // تأكد أنها قابلة للتكرار
             }
 
             foreach ($images as $imageFile) {
                 try {
                     $path = $imageFile->store('posts', 'public');
-                    $post->images()->create(['path' => $path]);
-                    Log::info('Image uploaded successfully: ' . $path);
+
+                    // حفظ الصورة في قاعدة البيانات
+                    $savedImage = $post->images()->create([
+                        'path' => 'storage/' . $path
+                    ]);
+
+                    Log::info('Image uploaded and saved: ' . $savedImage->path);
+
                 } catch (\Exception $fileException) {
-                    Log::warning('Image upload failed: ', ['exception' => $fileException]);
+                    Log::warning('Image upload failed: ', ['exception' => $fileException->getMessage()]);
                 }
             }
         }
 
-        return $this->apiResponse('success', 200, 'Post updated successfully', $post->fresh()->load('images'));
+        // تحميل البيانات المحدثة والعلاقات
+        $post = $post->fresh()->load(['images', 'comments', 'likes', 'user', 'saves']);
+
+        return $this->apiResponse('success', 200, 'Post updated successfully', $post);
 
     } catch (ValidationException $e) {
         Log::warning('Validation failed during update: ', ['errors' => $e->errors()]);
@@ -156,9 +169,12 @@ public function update(Request $request, Post $post)
 
     } catch (\Exception $e) {
         Log::error('Unexpected error during post update: ', ['exception' => $e]);
-        return $this->apiResponse('error', 500, 'Unexpected error occurred', null, ['exception' => $e->getMessage()]);
+        return $this->apiResponse('error', 500, 'Unexpected error occurred', null, [
+            'exception' => $e->getMessage(),
+        ]);
     }
 }
+
 
 public function deleteImage(Post $post, Image $image)
 {
